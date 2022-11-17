@@ -1,0 +1,17 @@
+{% extends 'flatpages/default.html' %}
+
+{% load custom_filters %}
+
+{% block title %}
+News
+{% endblock title %}
+
+
+{% block content %}
+<h1>Все новости:</h1>
+ {% for new in news %}
+            {{ new.title|censor }}
+            {{ new.text|censor }}
+            {{ new.datecr}}
+ {% endfor %}
+{% endblock content %}
