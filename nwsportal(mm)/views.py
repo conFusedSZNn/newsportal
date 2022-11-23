@@ -25,7 +25,13 @@ class PostList(ListView):
         return context
 
 
-
+class SearchList(ListView):
+    model = Post
+    ordering = 'one_to_many_post'
+    template_name = 'search.html'
+    context_object_name = 'news'
+    paginate_by = 10
+    
 class PostDetail(DetailView):
     model = Post
     template_name = 'new.html'
