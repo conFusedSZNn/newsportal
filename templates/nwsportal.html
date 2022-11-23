@@ -10,14 +10,7 @@ News
 {% block content %}
 <h1>Все новости:</h1>
 
-<form action="" method="get">
-  <div>
-    <label for="news">Введите дату фильтрации новостей:</label>
-      <input type="date" id="news" name="news" value="Найти">
-          {{ filterset.form.as_p }}
-      <input type="submit" value="Найти" />
-  </div>
-</form>
+
 <hr>
    {% if news %}
        <table>
