@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from datetime import datetime
+from django.urls import reverse
 
 class AuthorUser(models.Model):
     rate_au = models.FloatField(default = 0.00)
@@ -23,10 +24,11 @@ class Category(models.Model):
 
 class Post(models.Model):
     one_to_many_post = models.ForeignKey('AuthorUser', on_delete = models.PROTECT)
-    CHOICES = (
-        ('article', 'Статья'),
-        ('news', 'Новость'),
-    )
+    CHOICE = [
+        (1, 'Статья'),
+        (2, 'Новость'),
+    ]
+    chs = models.IntegerField(('chs'), choices = CHOICE, default = 2 )
     datecr = models.DateField(auto_now_add=True)
     many_to_many_cat = models.ManyToManyField('Category', through = 'PostCategory')
     title = models.CharField(max_length=255)
@@ -46,6 +48,8 @@ class Post(models.Model):
     def __str__(self):
         return f'{self.title.title()}: {self.text[:20]} ' \
                f' Дата публикации: {self.datecr}'
+    def get_absolute_url(self):
+        return reverse('post_details', args=[str(self.id)])
 
 
 
