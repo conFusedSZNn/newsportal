@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-de-hpco=a&bov^mvh*8-ro-qor@4tkqu6^wms@(t*$scff0wf0
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1']
 
 
 # Application definition
@@ -41,6 +41,12 @@ INSTALLED_APPS = [
     'django.contrib.flatpages',
     'nwsportal',
     'django_filters',
+    'registrate',
+    'protect',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
 ]
 
 MIDDLEWARE = [
@@ -70,6 +76,13 @@ TEMPLATES = [
             ],
         },
     },
+]
+
+AUTHENTICATION_BACKENDS = [
+
+    'django.contrib.auth.backends.ModelBackend',
+
+    'allauth.account.auth_backends.AuthenticationBackend',
 ]
 
 WSGI_APPLICATION = 'NewsPaper.wsgi.application'
@@ -116,6 +129,20 @@ USE_I18N = True
 
 USE_TZ = True
 
+SITE_ID = 1
+
+DATE_INPUT_FORMATS = ["%d %b, %Y"]
+
+LOGIN_URL ='/registrate/login/'
+LOGIN_REDIRECT_URL = '/'
+
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_UNIQUE_EMAIL = True
+ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
+ACCOUNT_EMAIL_VERIFICATION = 'none'
+
+ACCOUNT_FORMS = {'signup': 'registrate.models.BasicSignupForm'}
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
@@ -131,6 +158,3 @@ STATICFILES_DIRS = [
     BASE_DIR / "static"
 ]
 
-SITE_ID = 1
-
-DATE_INPUT_FORMATS = ["%d %b, %Y"]
