@@ -1,11 +1,40 @@
-from django.shortcuts import render
+from django.shortcuts import render, reverse, redirect
 from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, View
-from .models import Post
+from .models import Post, AuthorUser, Category
 from .filters import PostFilter
 from .forms import PostForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.mixins import PermissionRequiredMixin
+from django.core.mail import send_mail
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
+
+
+#class CategSubsView(View):
+  #  def post(self, request, *args, **kwargs):
+   #     sendsubscr = Category(
+   #         categ_name=request.POST['categ_name'],
+    #    )
+    #    sendsubscr.save()
+    #html_content = render_to_string(
+   # 'mailinglist_created.html',
+    # {
+   #     'nwsportal':sendsubscr,
+    # }
+    #)
+
+# в конструкторе уже знакомые нам параметры, да? Называются правда немного по-другому, но суть та же.
+   # msg = EmailMultiAlternatives(
+   # subject=f'{sendsubscr.categ_name}',
+   # body='',  # это то же, что и message
+    #from_email='qqwqfnrr@yandex.ru',
+   # to=['skavik46111@gmail.com'],  # это то же, что и recipients_list
+#)
+  #  msg.attach_alternative(html_content, "text/html")  # добавляем html
+
+  #  msg.send()  # отсылаем
+
 
 class MyView(PermissionRequiredMixin, View):
     permission_required = ('<app>.<action>_<model>',
@@ -55,6 +84,7 @@ class PostDetail(DetailView):
     template_name = 'new.html'
     # Название объекта, в котором будет выбранный пользователем продукт
     context_object_name = 'new'
+
 
 
 class PostCreate(CreateView, PermissionRequiredMixin):
@@ -114,4 +144,5 @@ class PostartDelete(DeleteView):
         post = form.save(commit=False)
         post.chs = 1
         return super().form_valid(form)
+
 
