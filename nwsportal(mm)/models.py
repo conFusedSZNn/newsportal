@@ -21,7 +21,7 @@ class AuthorUser(models.Model):
 
 class Category(models.Model):
     categ_name = models.CharField(max_length=255, unique = True, default = 'Неизвестная категория')
-
+    subscribers = models.ManyToManyField(User)
 class Post(models.Model):
     one_to_many_post = models.ForeignKey('AuthorUser', on_delete = models.PROTECT)
     CHOICE = [
