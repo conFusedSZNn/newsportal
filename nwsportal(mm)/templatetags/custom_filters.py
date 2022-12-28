@@ -4,6 +4,9 @@ from django import template
 register = template.Library()
 
 
+
+
+
 @register.filter()
 def censor(message: str):
    variants = ['mat', 'abc', 'def', 'no', 'filter']
