@@ -7,7 +7,6 @@ class AuthorUser(models.Model):
     rate_au = models.FloatField(default = 0.00)
     session_client = models.OneToOneField(User, on_delete= models.CASCADE)
     userAs = models.CharField(max_length=50, default = '')
-
     def update_rating(self):
         sum_rating_author = self.post_set.all().aggregate(Sum(' rating_post'))['rating_post__sum']*3
         sum_rating_comm = self.author_user.comment_set.all().aggregate(Sum('rating_comment'))['rating_comment__sum']
@@ -21,16 +20,22 @@ class AuthorUser(models.Model):
 
 class Category(models.Model):
     categ_name = models.CharField(max_length=255, unique = True, default = 'Неизвестная категория')
-    subscribers = models.ManyToManyField(User)
+    subscribers = models.ManyToManyField(User, related_name='categories')
+
+    def __str__(self):
+        return f'{self.categ_name}'
+
 class Post(models.Model):
     one_to_many_post = models.ForeignKey('AuthorUser', on_delete = models.PROTECT)
-    CHOICE = [
-        (1, 'Статья'),
-        (2, 'Новость'),
+    type_news = 'NW'
+    type_article = 'AR'
+    POST_TYPE = [
+        (type_news, 'Новость'),
+        (type_article, 'Статья'),
     ]
-    chs = models.IntegerField(('chs'), choices = CHOICE, default = 2 )
-    datecr = models.DateField(auto_now_add=True)
-    many_to_many_cat = models.ManyToManyField('Category', through = 'PostCategory')
+    post_type = models.CharField(max_length=2, choices=POST_TYPE, default = 1)
+    datecr = models.DateTimeField(auto_now_add=True)
+    category = models.ManyToManyField('Category', through = 'PostCategory')
     title = models.CharField(max_length=255)
     text = models.TextField(max_length=5000, default = '')
     rating_post = models.FloatField(default = 0.00)
@@ -70,3 +75,5 @@ class Comment(models.Model):
     def dislikecomm(self):
         self.ratecomm -= 1
         self.save()
+
+
