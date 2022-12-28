@@ -1,4 +1,4 @@
-from django.shortcuts import render, reverse, redirect
+from django.shortcuts import render, reverse, redirect,  get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, View
 from .models import Post, AuthorUser, Category
@@ -9,31 +9,8 @@ from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.core.mail import send_mail
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
+from django.contrib.auth.decorators import login_required
 
-
-#class CategSubsView(View):
-  #  def post(self, request, *args, **kwargs):
-   #     sendsubscr = Category(
-   #         categ_name=request.POST['categ_name'],
-    #    )
-    #    sendsubscr.save()
-    #html_content = render_to_string(
-   # 'mailinglist_created.html',
-    # {
-   #     'nwsportal':sendsubscr,
-    # }
-    #)
-
-# в конструкторе уже знакомые нам параметры, да? Называются правда немного по-другому, но суть та же.
-   # msg = EmailMultiAlternatives(
-   # subject=f'{sendsubscr.categ_name}',
-   # body='',  # это то же, что и message
-    #from_email='qqwqfnrr@yandex.ru',
-   # to=['skavik46111@gmail.com'],  # это то же, что и recipients_list
-#)
-  #  msg.attach_alternative(html_content, "text/html")  # добавляем html
-
-  #  msg.send()  # отсылаем
 
 
 class MyView(PermissionRequiredMixin, View):
@@ -49,8 +26,6 @@ class PostList(ListView):
     # Указываем имя шаблона, в котором будут все инструкции о том,
     # как именно пользователю должны быть показаны наши объекты
     template_name = 'nwsportal.html'
-    # Это имя списка, в котором будут лежать все объекты.
-    # Его надо указать, чтобы обратиться к списку объектов в html-шаблоне.
     context_object_name = 'news'
     paginate_by = 10
 
@@ -88,13 +63,20 @@ class PostDetail(DetailView):
 
 
 class PostCreate(CreateView, PermissionRequiredMixin):
-    permission_required = ('nwsportal.add_post')
     form_class = PostForm
     model = Post
     template_name = 'post_edit.html'
+    permission_required = ('nwsportal.add_post')
+
     def form_valid(self, form):
         post = form.save(commit=False)
-        post.chs = 2
+        if self.request.method == 'POST':
+            path_info = self.request.META['PATH_INFO']
+            if path_info == '/news/create/':
+                post.post_type = 'NW'
+            elif path_info == '/articles/create/':
+                post.post_type = 'AR'
+        post.save()
         return super().form_valid(form)
 
 class PostEdit(UpdateView, PermissionRequiredMixin):
@@ -102,47 +84,34 @@ class PostEdit(UpdateView, PermissionRequiredMixin):
     form_class = PostForm
     model = Post
     template_name = 'post_edit.html'
-    def form_valid(self, form):
-        post = form.save(commit=False)
-        post.chs = 2
-        return super().form_valid(form)
+    permission_required = ('nwsportal.change_post')
 
 class PostDelete(DeleteView):
     model = Post
     template_name = 'post_delete.html'
     success_url = reverse_lazy('post_list')
-    def form_valid(self, form):
-        post = form.save(commit=False)
-        post.chs = 2
-        return super().form_valid(form)
 
-class PostartCreate(CreateView,PermissionRequiredMixin ):
-    permission_required = ('nwsportal.add_post')
-    form_class = PostForm
+class CategoryListView(ListView):
     model = Post
-    template_name = 'post_edit.html'
-    def form_valid(self, form):
-        post = form.save(commit=False)
-        post.chs = 1
-        return super().form_valid(form)
+    template_name = 'category_list.html'
+    context_object_name = 'category_news_list'
 
-class PostartEdit(UpdateView, PermissionRequiredMixin ):
-    permission_required = ('nwsportal.change_post')
-    form_class = PostForm
-    model = Post
-    template_name = 'post_edit.html'
-    def form_valid(self, form):
-        post = form.save(commit=False)
-        post.chs = 1
-        return super().form_valid(form)
+    def get_queryset(self):
+        self.category = get_object_or_404(Category, id=self.kwargs['pk'])
+        queryset = Post.objects.filter(category=self.category).order_by('one_to_many_post')
+        return queryset
 
-class PostartDelete(DeleteView):
-    model = Post
-    template_name = 'post_delete.html'
-    success_url = reverse_lazy('post_list')
-    def form_valid(self, form):
-        post = form.save(commit=False)
-        post.chs = 1
-        return super().form_valid(form)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['is_not_subscriber'] = self.request.user not in self.category.subscribers.all()
+        context['category'] = self.category
+        return context
 
+@login_required
+def subscribe(request, pk):
+    user = request.user
+    category = Category.objects.get(pk)
+    category.subscribers.add(user)
 
+    message = 'Вы успешно подписались на рассылку новостей категории'
+    return render(request, 'subscribe.html', {'category': category, 'message': message})
