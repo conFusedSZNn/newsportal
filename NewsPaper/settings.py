@@ -47,6 +47,8 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
     'django_apscheduler',
+    'celery',
+    'redis',
 ]
 
 MIDDLEWARE = [
@@ -160,8 +162,8 @@ STATICFILES_DIRS = [
 
 EMAIL_HOST = 'smtp.yandex.ru'  # адрес сервера Яндекс-почты для всех один и тот же
 EMAIL_PORT = 465  # порт smtp сервера тоже одинаковый
-EMAIL_HOST_USER = '****'  # ваше имя пользователя, например, если ваша почта user@yandex.ru, то сюда надо писать user, иными словами, это всё то что идёт до собаки
-EMAIL_HOST_PASSWORD = '****'  # пароль от почты
+EMAIL_HOST_USER = 'qqwqfnrr'  # ваше имя пользователя, например, если ваша почта user@yandex.ru, то сюда надо писать user, иными словами, это всё то что идёт до собаки
+EMAIL_HOST_PASSWORD = 'qwertyuiop21--'  # пароль от почты
 EMAIL_USE_SSL = True# Яндекс использует ssl, подробнее о том, что это, почитайте в дополнительных источниках, но включать его здесь обязательно
 
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER + '@yandex.ru'
@@ -178,3 +180,121 @@ CELERY_RESULT_BACKEND = 'redis://localhost:6379'
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': os.path.join(BASE_DIR, 'cache_files'), # Указываем, куда будем сохранять кэшируемые файлы! Не забываем создать папку cache_files внутри папки с manage.py!
+    }
+}
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'style' : '{',
+    'formatters': {
+        'simple': {
+            'format':  '%(asctime)s %(levelname)s  %(message)s',
+        },
+        'warning': {
+            'format':  '%(asctime)s %(levelname)s  %(message)s  %(pathtime)s',
+        },
+        'error_and_crit': {
+            'format':   '%(asctime)s %(levelname)s  %(message)s  %(pathtime)s  %(exc_info)s',
+        },
+        'general_form': {
+            'format': '%(asctime)s %(levelname)s  %(module)s %(message)s ',
+        },
+        'errorslogs_form': {
+            'format': '%(asctime)s %(levelname)s  %(message)s  %(pathtime)s  %(exc_info)s ',
+        },
+        'security_form': {
+            'format': '%(asctime)s %(levelname)s  %(module)s %(message)s',
+        },
+        'email': {
+            'format': '%(asctime)s %(levelname)s  %(message)s  %(pathtime)s',
+        },
+    },
+    'filters': {
+        'require_debug_true': {
+            '()': 'django.utils.log.RequireDebugTrue',
+        },
+        'require_debug_false': {
+            '()': 'django.utils.log.RequireDebugFalse',
+        }
+    },
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'filters': ['require_debug_true'],
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+        },
+        'concole_warning': {
+            'level': 'WARNING',
+            'filters': ['require_debug_true'],
+            'class': 'logging.StreamHandler',
+            'formatter': 'warning',
+        },
+        'concole_crit_error': {
+            'level': 'ERROR',
+            'filters': ['require_debug_true'],
+            'class': 'logging.StreamHandler',
+            'formatter': 'error_and_crit',
+        },
+        'general': {
+            'level': 'INFO',
+            'filters': ['require_debug_false'],
+            'class': 'logging.FileHandler',
+            'filename': 'general.log',
+            'formatter': 'general_form',
+        },
+        'errorslog': {
+            'level': 'ERROR',
+            'filters': ['require_debug_true'],
+            'class': 'logging.FileHandler',
+            'filename': 'errors.log',
+            'formatter': 'errorslogs_form',
+         },
+        'security': {
+            'level': 'INFO',
+            'filters': ['require_debug_true'],
+            'class': 'logging.FileHandler',
+            'filename': 'security.log',
+            'formatter': 'security_form',
+            },
+        'mail_admins': {
+            'level': 'ERROR',
+            'filters': ['require_debug_false'],
+            'class': 'django.utils.log.AdminEmailHandler',
+            'formatter': 'email',
+            }
+        },
+    'loggers': {
+        'django': {
+            'handlers': ['console', 'concole_warning', 'concole_crit_error', 'general' ],
+            'propagate': True,
+         },
+        'django.request': {
+            'handlers': ['errorslog', 'mail_admins' ],
+            'propagate': True,
+         },
+        'django.server': {
+            'handlers': ['errorslog', 'mail_admins' ],
+            'propagate': True,
+         },
+        'django.template': {
+            'handlers': ['errorslog' ],
+            'propagate': True,
+         },
+        'django.db.backends': {
+            'handlers': ['errorslog' ],
+            'propagate': True,
+         },
+        'django.security': {
+            'handlers': ['security' ],
+            'propagate': True,
+         },
+        }
+    }
+
